@@ -33,7 +33,7 @@
 
      <!-- session configuration -->
      <session-config>
-             <session-timeout>45</session-timeout>
+             <session-timeout>105</session-timeout>
      </session-config>
-
+<!-- nathalia suarez -->
 </web-app>
