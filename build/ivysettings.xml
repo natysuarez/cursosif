@@ -1,0 +1,24 @@
+<ivysettings>
+	<properties environment="env"/>
+	<properties file="${ivy.settings.dir}/build.properties" />
+	<properties file="${ivy.settings.dir}/ivysettings-file.properties" />
+	
+	<settings defaultResolver="default" />
+	<resolvers>
+		<chain name="default" returnFirst="true">
+			<filesystem name="internal">
+				<artifact pattern="${user.home}/.ivy2/repository/[module]/[artifact]-[revision].[ext]" />
+			</filesystem>		
+			<ibiblio name="ibiblio-maven2" m2compatible="true" />
+			<ibiblio name="java-net-maven2" root="http://download.java.net/maven/2/" m2compatible="true" />
+			<ibiblio name="maven" root="http://mvnrepository.com/artifact/" m2compatible="true" />			
+		</chain>
+	</resolvers>
+
+	
+	<caches defaultCacheDir="${user.home}/.ivy2/${artifact.name}-default-cache"
+			resolutionCacheDir="${user.home}/.ivy2/${artifact.name}-resolve-cache" 
+			useOrigin="true"
+	/>
+			
+</ivysettings>

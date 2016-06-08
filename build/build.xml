@@ -1,0 +1,181 @@
+<project name="curso" default="packaging" 
+	xmlns:ivy="antlib:org.apache.ivy.ant"
+	xmlns:cs="antlib:com.puppycrawl.tools.checkstyle"	
+	>
+
+	<!-- CONFIGURATION. DON'T EDIT AFTER THIS LINE -->
+	<!-- ivy -->
+	<!-- resolve task -->
+	<target name="ivy-resolve">
+		<ivy:configure file="./ivysettings.xml" override="true" />
+		<ivy:resolve file="./ivy.xml" conf="*" resolveid="resolved.classpath" />
+		<ivy:cachefileset setid="ivy.cache.filelist" conf="*" />
+	</target>
+	<target name="ivy-clean-cache" depends="clean">
+		<ivy:cleancache/>
+	</target>
+	<!-- end ivy -->
+
+	<property file="build.properties" />
+	
+
+	<!-- main configuration -->
+	<property environment="env" />
+	<tstamp>
+		<format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+	</tstamp>
+	<!-- end main configuration -->
+
+	<!-- jboss properties -->
+	<property name="jboss.home" value="${env.JBOSS_HOME_8}" />
+	<property name="jboss.deploy.dir" value="${jboss.home}/standalone/deployments" /> 
+	
+	<!-- end jboss properties -->
+
+
+	<!-- checkstyle -->
+	<target name="checkstyle">
+		<cs:checkstyle config="sun_checks.xml"
+			failureProperty="checkstyle.failure"
+			failOnViolation="false">
+			<formatter type="xml" tofile="${distdir}/checkstyle_report.xml" />
+			<fileset dir="${srcdir}" includes="**/*.java" />
+		</cs:checkstyle>
+	</target>
+	<!-- end checkstyle -->
+
+
+	<!-- CONFIGURATION END. DON'T EDIT BELOW THIS LINE -->
+
+	<!-- application properties -->
+	<property name="appname" value="curso" />
+	<property name="bin" value="antbuild" />
+	<property name="src" value="src" />
+	<property name="dist" value="dist" />
+	<property name="build" value="build" />
+	<property name="lib" value="lib" />
+	<property name="dsname" value="${appname}-ds.xml" />
+	<property name="resources" value="resources" />
+	<property name="webdirname" value="WebContent" />
+	<!-- end application properties -->
+
+
+	<!-- application locations -->
+	<property name="appdir" location=".." />
+	<property name="srcdir" location="${appdir}/${src}" />
+	<property name="bindir" location="${appdir}/${bin}" />
+	<property name="distdir" location="${appdir}/${dist}" />
+	<property name="distdir.lib" location="${distdir}/${lib}" />
+	<property name="libdir" location="${appdir}/lib" />
+	<property name="resourcesdir" location="${appdir}/${resources}" />
+	<property name="webdir" location="${appdir}/${webdirname}" />
+	<property name="builddir" location="${appdir}/${build}" />
+
+	<!-- artifact configuration -->
+	<property name="version" value="1.0.0" />
+	<property name="artifact.extension" value="war" />
+	<property name="src.extension" value="zip" />
+	<property name="src.suffix" value="-src" />
+	<property name="doc.extension" value="zip" />
+	<property name="doc.suffix" value="-doc" />
+	<property name="artifactdest" value="${appname}-${version}.${artifact.extension}" />
+	<property name="srcdest" value="${appname}${src.suffix}-${version}.${src.extension}" />
+	<property name="docdest" value="${appname}${doc.suffix}-${version}.${doc.extension}" />
+
+
+	<!-- application builder -->
+	<target name="compile" depends="ivy-resolve, clean" >
+		<mkdir dir="${bindir}"/>
+		<mkdir dir="${distdir}"/>
+		<mkdir dir="${distdir.lib}"/>
+
+		<ivy:retrieve pattern="${distdir.lib}/[artifact]-[revision].[ext]" resolveid="resolved.classpath" type="jar, bundle"  conf="runtime"/>
+
+		<javac srcdir="${srcdir}" destdir="${bindir}" includeantruntime="false" failonerror="true" debug="true" debuglevel="lines,vars,source" >
+
+			<classpath>
+				<fileset refid="ivy.cache.filelist" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="packaging" depends="compile">
+
+		<buildnumber file="version.properties"/>
+
+
+		<war destfile="${distdir}/${artifactdest}" webxml="${appdir}/WebContent/WEB-INF/web.xml" >
+			<zipfileset dir="${bindir}" includes="**/*.class" prefix="WEB-INF/classes" />
+			<zipfileset dir="${resourcesdir}" includes="**/*" prefix="WEB-INF/classes" />
+			<zipfileset dir="${builddir}" includes="shiro.ini, version.properties, build.properties" prefix="WEB-INF/classes" />
+			<zipfileset dir="${distdir.lib}" includes="**/*.jar" prefix="WEB-INF/lib" />
+			<zipfileset dir="${srcdir}" includes="**/*.xml" prefix="WEB-INF/classes" />
+			<zipfileset dir="${webdir}/WEB-INF" includes="**/*.xml"  prefix="WEB-INF" />
+			<zipfileset dir="${webdir}/WEB-INF" includes="**/*.html"  prefix="WEB-INF" />
+			<zipfileset dir="${webdir}" includes="**/*.js" />
+			<zipfileset dir="${webdir}" includes="**/*.css" />
+			<zipfileset dir="${webdir}/images" includes="**/*"  prefix="images" />
+			
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Built-Date" value="${TODAY}"/>
+				<attribute name="Implementation-Version" value="${implementation.version}" />				
+				<attribute name="Implementation-Vendor" value="${implementation.vendor}" />
+			</manifest>
+		</war>
+
+		<zip destfile="${distdir}/${srcdest}">
+			<zipfileset dir="${srcdir}" includes="**/*.*" />
+		</zip>
+	</target>
+
+	<target name="clean">
+		<delete failonerror="false">
+			<fileset dir="${distdir}">
+				<include name="**/*.*"/>
+			</fileset>
+			<fileset dir="${bindir}">
+				<include name="**/*.*"/>
+			</fileset>
+		</delete>
+	</target>
+
+
+	<target name="jboss-clean">
+		<delete>
+			<fileset dir="${jboss.deploy.dir}">
+				<include name="${artifactdest}"/>
+
+			</fileset>
+		</delete>
+	</target>
+
+
+	<target name="jboss-deploy" depends="packaging">
+		<copy todir="${jboss.deploy.dir}">
+			<fileset dir="${distdir}">
+				<include name="${artifactdest}" />
+			</fileset>
+		</copy>
+	</target>
+
+
+	<target name="java-doc" depends="ivy-resolve">
+		<mkdir dir="${distdir}/doc"/>
+		<javadoc 	sourcepath="${srcdir}"
+		            destdir="${distdir}/doc"		            
+		            author="true"
+		            version="true"
+		            use="true"
+		            windowtitle="${appname} API"
+		            doctitle="&lt;h1&gt;${appname}&lt;/h1&gt;">
+
+			<classpath>
+				<fileset refid="ivy.cache.filelist" />
+
+			</classpath>
+		</javadoc>
+	</target>
+
+	<!-- end application builder -->
+</project>

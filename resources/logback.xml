@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+	<appender name="CURSO_GUI_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${jboss.server.log.dir}/curso_gui.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{HH:mm:ss.SSS} %level %logger{26} - %msg%n</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<FileNamePattern>${jboss.server.log.dir}/curso_gui.%i.log.zip</FileNamePattern>
+			<MinIndex>1</MinIndex>
+			<MaxIndex>5</MaxIndex>
+		</rollingPolicy>
+
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<MaxFileSize>5MB</MaxFileSize>
+		</triggeringPolicy>
+	</appender>
+		
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %level %logger{26} - %msg%n</pattern>
+		</encoder>
+	</appender>
+			
+	<logger name="py.com.sif.curso" level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="CURSO_GUI_FILE" />	
+	</logger>
+		
+	<logger name="org.springframework" level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="CURSO_GUI_FILE" />	
+	</logger>
+	
+	<logger name="org.jboss.netty" level="error" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="CURSO_GUI_FILE" />	
+	</logger>
+	
+	<logger name="org.thymeleaf" level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="CURSO_GUI_FILE" />	
+	</logger>
+	
+	<logger name="py.com.sif" level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="CURSO_GUI_FILE" />	
+	</logger>
+	
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</configuration>
